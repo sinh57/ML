@@ -1,0 +1,106 @@
+# ============================================================
+# STEP 1: Import Required Libraries
+# ============================================================
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+
+
+# ============================================================
+# STEP 2: Load the Dataset
+# ============================================================
+df = pd.read_csv(r"C:\Users\lenovo\OneDrive\Documents\ML_codes\2.emails\emails.csv")
+print("Dataset Loaded Successfully!")
+print(df.head())
+
+
+
+# ============================================================
+# STEP 3: Check for Missing Values
+# ============================================================
+print("\nMissing Values in Dataset:\n", df.isnull().sum().sum())
+
+
+
+# ============================================================
+# STEP 4: Prepare Features and Target Variable
+# ============================================================
+# Drop the 'Email No.' column since it's just an identifier
+X = df.drop(columns=["Email No.", "Prediction"])
+y = df["Prediction"]
+
+
+
+# ============================================================
+# STEP 5: Split Dataset into Training and Testing Sets
+# ============================================================
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+print("\nData Split Done!")
+print(f"Training samples: {X_train.shape[0]}, Testing samples: {X_test.shape[0]}")
+
+
+
+# ============================================================
+# STEP 6: Feature Scaling
+# ============================================================
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+
+
+# ============================================================
+# STEP 7: Apply K-Nearest Neighbors (KNN)
+# ============================================================
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train_scaled, y_train)
+y_pred_knn = knn.predict(X_test_scaled)
+
+print("\n=== K-Nearest Neighbors (KNN) Results ===")
+print("Accuracy:", accuracy_score(y_test, y_pred_knn))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_knn))
+print("Classification Report:\n", classification_report(y_test, y_pred_knn))
+
+
+
+# ============================================================
+# STEP 8: Apply Support Vector Machine (SVM)
+# ============================================================
+svm = SVC(kernel='linear')  # Linear kernel for binary classification
+svm.fit(X_train_scaled, y_train)
+y_pred_svm = svm.predict(X_test_scaled)
+
+print("\n=== Support Vector Machine (SVM) Results ===")
+print("Accuracy:", accuracy_score(y_test, y_pred_svm))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_svm))
+print("Classification Report:\n", classification_report(y_test, y_pred_svm))
+
+
+
+# ============================================================
+# STEP 9: Compare Model Performances
+# ============================================================
+results = pd.DataFrame({
+    'Model': ['KNN', 'SVM'],
+    'Accuracy': [accuracy_score(y_test, y_pred_knn), accuracy_score(y_test, y_pred_svm)]
+})
+print("\n=== Model Performance Comparison ===")
+print(results)
+
+
+
+# ============================================================
+# STEP 10: Visualization of Accuracy Comparison
+# ============================================================
+sns.barplot(x='Model', y='Accuracy', data=results)
+plt.title("Model Accuracy Comparison (KNN vs SVM)")
+plt.show()

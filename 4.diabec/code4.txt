@@ -1,0 +1,72 @@
+# ============================================================
+# AIM:
+# Implement K-Nearest Neighbors (KNN) algorithm on diabetes.csv
+# Compute confusion matrix, accuracy, error rate, precision, recall
+# and plot Accuracy vs K graph.
+# ============================================================
+
+# STEP 1: Import Libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
+
+# STEP 2: Load Dataset
+df = pd.read_csv(r"C:\Users\lenovo\OneDrive\Documents\ML_codes\4.diabec\diabetes.csv")
+print(" Dataset Loaded Successfully!")
+print(df.head())
+
+# STEP 3: Split into Features (X) and Target (y)
+X = df.drop("Outcome", axis=1)
+y = df["Outcome"]
+
+# STEP 4: Split into Training and Testing Sets (80% - 20%)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# STEP 5: Scale the Data (important for KNN)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# STEP 6: Train KNN Model with k=5
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)
+
+# STEP 7: Make Predictions
+y_pred = knn.predict(X_test)
+
+# STEP 8: Evaluate Model
+cm = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+error_rate = 1 - accuracy
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+
+# STEP 9: Display Results
+print("\n Performance Evaluation:")
+print("Confusion Matrix:\n", cm)
+print(f"Accuracy   : {accuracy*100:.2f}%")
+print(f"Error Rate : {error_rate*100:.2f}%")
+print(f"Precision  : {precision*100:.2f}%")
+print(f"Recall     : {recall*100:.2f}%")
+
+# STEP 10: Find Best K using Accuracy Comparison
+accuracy_list = []
+k_values = range(1, 21)  # Try K from 1 to 20
+
+for k in k_values:
+    model = KNeighborsClassifier(n_neighbors=k)
+    model.fit(X_train, y_train)
+    y_pred_k = model.predict(X_test)
+    accuracy_list.append(accuracy_score(y_test, y_pred_k))
+
+# STEP 11: Plot Accuracy vs K Graph
+plt.figure(figsize=(8,5))
+plt.plot(k_values, accuracy_list, color='blue', marker='o', markerfacecolor='red')
+plt.title('Accuracy vs K Value')
+plt.xlabel('Number of Neighbors (K)')
+plt.ylabel('Accuracy')
+plt.grid(True)
+plt.show()
