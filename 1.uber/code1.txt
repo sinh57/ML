@@ -2,46 +2,82 @@
 # UBER FARE PREDICTION PROJECT
 # ============================================================
 # AIM:
-# Predict the price of the Uber ride from a given pickup point 
-# to the drop-off location using ML models.
+# Predict the fare (price) of an Uber ride from pickup to drop-off
+# location using Machine Learning (ML) regression models.
 #
 # TASKS:
-# 1. Pre-process the dataset
-# 2. Identify outliers
-# 3. Check correlation
-# 4. Implement Linear Regression & Random Forest Regression
-# 5. Evaluate models using R2, RMSE, MAE, etc.
+# 1. Pre-process the dataset (cleaning & formatting)
+# 2. Identify and remove outliers
+# 3. Check correlation between features
+# 4. Implement two models → Linear Regression & Random Forest Regression
+# 5. Evaluate and compare models using R², RMSE, and MAE
 # ============================================================
 
 
-
-# STEP 1: Import libraries
+# ============================================================
+# STEP 1: Import required libraries
+# ============================================================
+# pandas → for data handling
+# numpy → for numerical operations
+# matplotlib → for data visualization (graphs)
+# sklearn → for ML model creation, splitting, and evaluation
 import pandas as pd, numpy as np, matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
+
+# ============================================================
 # STEP 2: Load dataset
+# ============================================================
+# Load the CSV file containing Uber ride data
 df = pd.read_csv(r"C:\Users\lenovo\OneDrive\Documents\ML_codes\1.uber\uber.csv")
+
+# Some CSV files save row numbers as an extra column like 'Unnamed: 0'
+# The below code checks if it exists and removes it (data cleaning step)
 if 'Unnamed: 0' in df.columns:
     df.drop(columns=['Unnamed: 0'], inplace=True)
 
-# STEP 3: Clean & preprocess
+
+# ============================================================
+# STEP 3: Clean & preprocess data
+# ============================================================
+# Convert the pickup_datetime column to proper datetime format
+# 'errors="coerce"' converts invalid date formats to NaT (missing)
 df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'], errors='coerce')
+
+# Drop rows having missing (NaN) values in important columns only
+# subset → specifies the list of columns to check for missing values
 df.dropna(subset=['fare_amount','pickup_longitude','pickup_latitude',
                   'dropoff_longitude','dropoff_latitude','pickup_datetime'], inplace=True)
-df = df[(df['fare_amount']>0)&(df['fare_amount']<1000)]
-df = df[(df['passenger_count']>=1)&(df['passenger_count']<=6)]
 
-# STEP 4: Feature engineering – Distance & Time
+# Remove invalid fare values (negative or too high)
+df = df[(df['fare_amount'] > 0) & (df['fare_amount'] < 1000)]
+
+# Keep only valid passenger counts (1 to 6)
+df = df[(df['passenger_count'] >= 1) & (df['passenger_count'] <= 6)]
+
+
+# ============================================================
+# STEP 4: Feature Engineering – Extract distance and time features
+# ============================================================
+# Define a function to calculate distance (in km) using the Haversine formula
+# Haversine formula calculates the shortest distance between two coordinates on Earth
 def haversine(lon1, lat1, lon2, lat2):
     from math import radians, sin, cos, asin, sqrt
-    lon1, lat1, lon2, lat2 = map(radians,[lon1,lat1,lon2,lat2])
-    return 6371 * 2 * asin(sqrt(sin((lat2-lat1)/2)**2 + cos(lat1)*cos(lat2)*sin((lon2-lon1)/2)**2))
-df['distance_km'] = df.apply(lambda x: haversine(x['pickup_longitude'],x['pickup_latitude'],
-                                                 x['dropoff_longitude'],x['dropoff_latitude']),axis=1)
-df['hour'],df['day'],df['month'],df['year'],df['weekday'] = (
+    # Convert all coordinates from degrees to radians
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    # Apply Haversine formula
+    return 6371 * 2 * asin(sqrt(sin((lat2 - lat1)/2)**2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1)/2)**2))
+
+# Apply the function to each row to calculate trip distance
+# axis=1 → means apply function row-wise
+df['distance_km'] = df.apply(lambda x: haversine(x['pickup_longitude'], x['pickup_latitude'],
+                                                 x['dropoff_longitude'], x['dropoff_latitude']), axis=1)
+
+# Extract useful time-based features from the pickup_datetime column
+df['hour'], df['day'], df['month'], df['year'], df['weekday'] = (
     df['pickup_datetime'].dt.hour,
     df['pickup_datetime'].dt.day,
     df['pickup_datetime'].dt.month,
@@ -49,51 +85,99 @@ df['hour'],df['day'],df['month'],df['year'],df['weekday'] = (
     df['pickup_datetime'].dt.weekday
 )
 
-data = df[['fare_amount','distance_km','passenger_count','hour','day','month','year','weekday']]
-data = data[(data['distance_km']>0)&(data['distance_km']<200)]
+# Select relevant features and remove outlier distances (>200 km)
+data = df[['fare_amount', 'distance_km', 'passenger_count', 'hour', 'day', 'month', 'year', 'weekday']]
+data = data[(data['distance_km'] > 0) & (data['distance_km'] < 200)]
 
-# STEP 5: Correlation check
+
+# ============================================================
+# STEP 5: Correlation Check
+# ============================================================
+# Find correlation between all numeric columns
+# corr() → shows strength of relationships between variables (-1 to +1)
+# Helps identify which features affect fare amount most
 print(data.corr())
 
-# STEP 6: Train-test split
+
+# ============================================================
+# STEP 6: Split data into Training and Testing sets
+# ============================================================
+# X → input features, y → target variable (fare)
 X = data[['distance_km','passenger_count','hour','day','month','year','weekday']]
 y = data['fare_amount']
-X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2,random_state=42)
 
-# STEP 7: Train models
-lr = LinearRegression().fit(X_train,y_train)
-rf = RandomForestRegressor(n_estimators=100,random_state=42).fit(X_train,y_train)
+# train_test_split() → splits data into training (80%) and testing (20%)
+# random_state=42 → ensures same split every time (reproducibility)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# STEP 8: Predictions
+
+# ============================================================
+# STEP 7: Train ML Models
+# ============================================================
+# Linear Regression → simple model that fits a straight line
+lr = LinearRegression().fit(X_train, y_train)
+
+# Random Forest → advanced ensemble model (many decision trees)
+# n_estimators=100 → number of trees; random_state=42 for repeatable results
+rf = RandomForestRegressor(n_estimators=100, random_state=42).fit(X_train, y_train)
+
+
+# ============================================================
+# STEP 8: Make Predictions
+# ============================================================
+# Predict fare values on unseen test data
 y_pred_lr = lr.predict(X_test)
 y_pred_rf = rf.predict(X_test)
 
-# STEP 9: Evaluation function
-def evaluate(y_true,y_pred,name):
-    rmse=np.sqrt(mean_squared_error(y_true,y_pred))
-    mae=mean_absolute_error(y_true,y_pred)
-    r2=r2_score(y_true,y_pred)
+
+# ============================================================
+# STEP 9: Evaluate Models
+# ============================================================
+# Define function to calculate RMSE, MAE, and R²
+def evaluate(y_true, y_pred, name):
+    rmse = np.sqrt(mean_squared_error(y_true, y_pred))   # Root Mean Squared Error (lower is better)
+    mae = mean_absolute_error(y_true, y_pred)            # Mean Absolute Error (average difference)
+    r2 = r2_score(y_true, y_pred)                        # R² Score (higher is better)
     print(f"\n{name} → R2:{r2:.3f}, RMSE:{rmse:.3f}, MAE:{mae:.3f}")
-    
-evaluate(y_test,y_pred_lr,"Linear Regression")
-evaluate(y_test,y_pred_rf,"Random Forest")
 
-# STEP 10: Comparison & Visualization
-results=pd.DataFrame({
-    'Model':['Linear Regression','Random Forest'],
-    'R2':[r2_score(y_test,y_pred_lr),r2_score(y_test,y_pred_rf)],
-    'RMSE':[np.sqrt(mean_squared_error(y_test,y_pred_lr)),
-            np.sqrt(mean_squared_error(y_test,y_pred_rf))],
-    'MAE':[mean_absolute_error(y_test,y_pred_lr),
-           mean_absolute_error(y_test,y_pred_rf)]
+# Evaluate both models
+evaluate(y_test, y_pred_lr, "Linear Regression")
+evaluate(y_test, y_pred_rf, "Random Forest")
+
+
+# ============================================================
+# STEP 10: Compare and Visualize Results
+# ============================================================
+# Create comparison table for both models
+results = pd.DataFrame({
+    'Model': ['Linear Regression', 'Random Forest'],
+    'R2': [r2_score(y_test, y_pred_lr), r2_score(y_test, y_pred_rf)],
+    'RMSE': [np.sqrt(mean_squared_error(y_test, y_pred_lr)),
+             np.sqrt(mean_squared_error(y_test, y_pred_rf))],
+    'MAE': [mean_absolute_error(y_test, y_pred_lr),
+            mean_absolute_error(y_test, y_pred_rf)]
 })
-print("\nModel Comparison:\n",results)
+print("\nModel Comparison:\n", results)
 
-plt.figure(figsize=(7,4))
+# Visualization: Actual vs Predicted Fare comparison
+plt.figure(figsize=(7, 4))  # figsize → controls plot size in inches (width=7, height=4)
+
+# Scatter plot for Random Forest predictions (blue)
+# alpha → transparency level (0 = invisible, 1 = solid)
 plt.scatter(y_test[:100], y_pred_rf[:100], color='blue', alpha=0.6, label='Random Forest')
+
+# Scatter plot for Linear Regression predictions (red)
 plt.scatter(y_test[:100], y_pred_lr[:100], color='red', alpha=0.6, label='Linear Regression')
+
+# Label x-axis and y-axis
 plt.xlabel("Actual Fare")
 plt.ylabel("Predicted Fare")
+
+# Add title and legend to identify models
 plt.title("Actual vs Predicted Fare Comparison")
+
+# legend() → displays color label box for each model
 plt.legend()
+
+# Show final plot
 plt.show()
