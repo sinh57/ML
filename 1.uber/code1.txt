@@ -90,11 +90,10 @@ results=pd.DataFrame({
 print("\nModel Comparison:\n",results)
 
 plt.figure(figsize=(7,4))
-plt.scatter(y_test[:100],y_pred_rf[:100],color='blue',label='Random Forest',alpha=0.6)
-plt.scatter(y_test[:100],y_pred_lr[:100],color='red',label='Linear Regression',alpha=0.6)
-plt.xlabel("Actual Fare"); plt.ylabel("Predicted Fare")
-plt.title("Actual vs Predicted Fare"); plt.legend(); plt.show()
-
-plt.legend()
+plt.scatter(y_test[:100], y_pred_rf[:100], color='blue', alpha=0.6, label='Random Forest')
+plt.scatter(y_test[:100], y_pred_lr[:100], color='red', alpha=0.6, label='Linear Regression')
+plt.xlabel("Actual Fare")
+plt.ylabel("Predicted Fare")
 plt.title("Actual vs Predicted Fare Comparison")
+plt.legend()
 plt.show()
