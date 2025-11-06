@@ -5,7 +5,16 @@
 # and plot Accuracy vs K graph.
 # ============================================================
 
+
+# ============================================================
 # STEP 1: Import Libraries
+# ============================================================
+# pandas → to handle and analyze dataset (read CSV, data frames)
+# matplotlib → to visualize accuracy graph
+# sklearn.model_selection → for splitting data into training & testing
+# sklearn.preprocessing → for scaling features (normalization)
+# sklearn.neighbors → contains KNeighborsClassifier (KNN model)
+# sklearn.metrics → provides evaluation metrics (accuracy, confusion matrix, etc.)
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -13,38 +22,89 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
 
-# STEP 2: Load Dataset
-df = pd.read_csv(r"C:\Users\lenovo\OneDrive\Documents\ML_codes\4.diabec\diabetes.csv")
-print(" Dataset Loaded Successfully!")
-print(df.head())
 
+
+# ============================================================
+# STEP 2: Load Dataset
+# ============================================================
+# Load the diabetes dataset using pandas
+# The dataset contains several medical attributes and an "Outcome" column (0 = Non-diabetic, 1 = Diabetic)
+df = pd.read_csv(r"C:\Users\lenovo\OneDrive\Documents\ML_codes\4.diabec\diabetes.csv")
+
+print(" Dataset Loaded Successfully!")
+print(df.head())  # Display first 5 rows of dataset
+
+
+
+# ============================================================
 # STEP 3: Split into Features (X) and Target (y)
+# ============================================================
+# Features (X): all independent variables used for prediction
+# Target (y): dependent variable 'Outcome' that indicates diabetes (0/1)
 X = df.drop("Outcome", axis=1)
 y = df["Outcome"]
 
+
+
+# ============================================================
 # STEP 4: Split into Training and Testing Sets (80% - 20%)
+# ============================================================
+# Divide dataset into training set (80%) and testing set (20%)
+# random_state=42 ensures the same random split every time (reproducibility)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+
+
+# ============================================================
 # STEP 5: Scale the Data (important for KNN)
+# ============================================================
+# KNN is distance-based → features with large values can dominate others
+# Hence, scaling (standardization) is needed to bring all features to same scale.
+# StandardScaler converts data to mean=0 and standard deviation=1.
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# STEP 6: Train KNN Model with k=5
-knn = KNeighborsClassifier(n_neighbors=5)
-knn.fit(X_train, y_train)
 
+
+# ============================================================
+# STEP 6: Train KNN Model with k=5
+# ============================================================
+# KNN (K-Nearest Neighbors) algorithm:
+# It classifies a new data point based on the majority class of its k nearest neighbors.
+# n_neighbors=5 → algorithm considers 5 nearest points to make prediction.
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)  # Train (fit) the model on training data
+
+
+
+# ============================================================
 # STEP 7: Make Predictions
+# ============================================================
+# Predict the class labels (0 or 1) for the test data using the trained model.
 y_pred = knn.predict(X_test)
 
+
+
+# ============================================================
 # STEP 8: Evaluate Model
+# ============================================================
+# Confusion Matrix → shows correct and incorrect predictions
+# Accuracy → percentage of correctly predicted samples
+# Error Rate → percentage of incorrect predictions (1 - accuracy)
+# Precision → correctly predicted positives / all predicted positives
+# Recall → correctly predicted positives / all actual positives
 cm = confusion_matrix(y_test, y_pred)
 accuracy = accuracy_score(y_test, y_pred)
 error_rate = 1 - accuracy
 precision = precision_score(y_test, y_pred)
 recall = recall_score(y_test, y_pred)
 
+
+
+# ============================================================
 # STEP 9: Display Results
+# ============================================================
 print("\n Performance Evaluation:")
 print("Confusion Matrix:\n", cm)
 print(f"Accuracy   : {accuracy*100:.2f}%")
@@ -52,7 +112,14 @@ print(f"Error Rate : {error_rate*100:.2f}%")
 print(f"Precision  : {precision*100:.2f}%")
 print(f"Recall     : {recall*100:.2f}%")
 
+
+
+# ============================================================
 # STEP 10: Find Best K using Accuracy Comparison
+# ============================================================
+# We can test different values of 'K' (number of neighbors)
+# to see which gives the best accuracy.
+# Here, we try K = 1 to 20 and store the accuracy for each.
 accuracy_list = []
 k_values = range(1, 21)  # Try K from 1 to 20
 
@@ -62,11 +129,16 @@ for k in k_values:
     y_pred_k = model.predict(X_test)
     accuracy_list.append(accuracy_score(y_test, y_pred_k))
 
+
+
+# ============================================================
 # STEP 11: Plot Accuracy vs K Graph
+# ============================================================
+# This helps us visually find the best 'K' (where accuracy is highest)
 plt.figure(figsize=(8,5))
 plt.plot(k_values, accuracy_list, color='blue', marker='o', markerfacecolor='red')
-plt.title('Accuracy vs K Value')
-plt.xlabel('Number of Neighbors (K)')
-plt.ylabel('Accuracy')
-plt.grid(True)
-plt.show()
+plt.title('Accuracy vs K Value')        # Title of the plot
+plt.xlabel('Number of Neighbors (K)')   # X-axis label
+plt.ylabel('Accuracy')                  # Y-axis label
+plt.grid(True)                          # Add gridlines for clarity
+plt.show()                              # Display the graph
