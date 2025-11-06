@@ -1,39 +1,79 @@
+# ============================================================
+# GRADIENT DESCENT IMPLEMENTATION
+# ============================================================
+
+# Importing matplotlib for plotting graph between x and y
 import matplotlib.pyplot as plt
 
-# Step 1: Define the function and its derivative
+
+# ============================================================
+# STEP 1: Define the Function and its Derivative
+# ============================================================
+# Function: f(x) = (x + 3)²
+# Our goal is to find the minimum point (lowest y-value) of this curve.
 def f(x):
-    return (x + 3)**2          # given function y = (x + 3)^2
+    return (x + 3)**2          # Given function
 
+# Derivative (df/dx): 2(x + 3)
+# The derivative gives the slope (gradient) of the function at a point.
 def df(x):
-    return 2 * (x + 3)         # derivative = 2(x + 3)
+    return 2 * (x + 3)         # Gradient of f(x)
 
-# Step 2: Set initial values
-x = 2                          # starting point
-learning_rate = 0.1            # step size
-iterations = 50                # number of steps
 
-# Step 3: Lists to store progress for plotting
-x_list = []
-y_list = []
 
-# Step 4: Gradient Descent Loop
+# ============================================================
+# STEP 2: Set Initial Values
+# ============================================================
+x = 2                          # Starting value of x (initial guess)
+learning_rate = 0.1            # Step size → how big each move should be along the slope
+iterations = 50                # Number of times we update x to reach minimum
+
+
+
+# ============================================================
+# STEP 3: Lists to Store Progress for Plotting
+# ============================================================
+# These lists keep track of how x and y values change in each iteration
+x_list = []                    # Stores x values
+y_list = []                    # Stores corresponding y = f(x) values
+
+
+
+# ============================================================
+# STEP 4: Gradient Descent Loop
+# ============================================================
+# Idea:
+# Move step-by-step in the direction of the negative gradient
+# (opposite direction of slope) to reach the minimum point.
+
 for i in range(iterations):
-    y = f(x)
-    x_list.append(x)
-    y_list.append(y)
+    y = f(x)                   # Calculate current y value
+    x_list.append(x)           # Save x for plotting
+    y_list.append(y)           # Save y for plotting
     
-    grad = df(x)                # find gradient
-    x = x - learning_rate * grad  # update x
-    
+    grad = df(x)               # Compute gradient (slope) at current x
+    x = x - learning_rate * grad  # Update x using gradient descent formula
+
+    # Display each step (iteration number, current x and y)
     print(f"Iteration {i+1}: x = {x:.4f}, y = {f(x):.4f}")
 
-# Step 5: Final result
+
+
+# ============================================================
+# STEP 5: Final Result
+# ============================================================
+# After all iterations, we get an approximate value of the minimum point.
 print("\nLocal minimum occurs at x =", round(x, 4), "and y =", round(f(x), 4))
 
-# Step 6: Visualization
-plt.plot(x_list, y_list, 'ro--')
-plt.title("Gradient Descent for y = (x + 3)²")
-plt.xlabel("x")
-plt.ylabel("y")
-plt.grid(True)
-plt.show()
+
+
+# ============================================================
+# STEP 6: Visualization of Gradient Descent Path
+# ============================================================
+# Plotting the path of descent (how x and y change over time)
+plt.plot(x_list, y_list, 'ro--')  # 'ro--' → red circles connected with dashed lines
+plt.title("Gradient Descent for y = (x + 3)²")  # Title of the plot
+plt.xlabel("x")                    # X-axis label
+plt.ylabel("y")                    # Y-axis label
+plt.grid(True)                     # Add grid for better visualization
+plt.show()                         # Display the graph
