@@ -1,6 +1,15 @@
 # ============================================================
 # STEP 1: Import Required Libraries
 # ============================================================
+# pandas → for handling and analyzing datasets (tables, CSV files)
+# numpy → for numerical operations and mathematical computations
+# matplotlib & seaborn → for data visualization and plotting graphs
+# sklearn.model_selection → for splitting dataset into training and testing sets
+# sklearn.preprocessing → for scaling (normalizing) data features
+# sklearn.neighbors → for KNN (K-Nearest Neighbors) algorithm
+# sklearn.svm → for Support Vector Machine (SVM) algorithm
+# sklearn.metrics → for evaluating model performance using accuracy, confusion matrix, etc.
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,15 +25,20 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 # ============================================================
 # STEP 2: Load the Dataset
 # ============================================================
+# Read the dataset from a CSV file using pandas
+# The dataset contains email data with features and a "Prediction" column (target)
 df = pd.read_csv(r"C:\Users\lenovo\OneDrive\Documents\ML_codes\2.emails\emails.csv")
+
 print("Dataset Loaded Successfully!")
-print(df.head())
+print(df.head())  # Displays first 5 rows for quick look at data structure
 
 
 
 # ============================================================
 # STEP 3: Check for Missing Values
 # ============================================================
+# Missing values can cause errors in model training.
+# 'isnull()' checks for null values, and 'sum().sum()' counts total missing entries.
 print("\nMissing Values in Dataset:\n", df.isnull().sum().sum())
 
 
@@ -32,18 +46,26 @@ print("\nMissing Values in Dataset:\n", df.isnull().sum().sum())
 # ============================================================
 # STEP 4: Prepare Features and Target Variable
 # ============================================================
-# Drop the 'Email No.' column since it's just an identifier
-X = df.drop(columns=["Email No.", "Prediction"])
-y = df["Prediction"]
+# 'Features (X)' → all independent input columns used for prediction
+# 'Target (y)' → the dependent output column ('Prediction') we want to predict
+# 'Email No.' is just an identifier column, not useful for prediction → drop it
+X = df.drop(columns=["Email No.", "Prediction"])  # Features
+y = df["Prediction"]                              # Target label
 
 
 
 # ============================================================
 # STEP 5: Split Dataset into Training and Testing Sets
 # ============================================================
+# Divide dataset into two parts:
+#  - Training set → used to train (fit) the model
+#  - Testing set → used to evaluate model performance
+# test_size=0.2 means 20% for testing and 80% for training
+# random_state=42 → ensures reproducibility of results
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
+
 print("\nData Split Done!")
 print(f"Training samples: {X_train.shape[0]}, Testing samples: {X_test.shape[0]}")
 
@@ -52,33 +74,44 @@ print(f"Training samples: {X_train.shape[0]}, Testing samples: {X_test.shape[0]}
 # ============================================================
 # STEP 6: Feature Scaling
 # ============================================================
+# Feature Scaling (Standardization) → converts all feature values to a similar scale.
+# This helps algorithms like KNN and SVM perform better since they are distance-based.
+# StandardScaler transforms data such that mean = 0 and standard deviation = 1.
 scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+X_train_scaled = scaler.fit_transform(X_train)  # Fit to training data and transform
+X_test_scaled = scaler.transform(X_test)        # Transform test data using same scaling
 
 
 
 # ============================================================
 # STEP 7: Apply K-Nearest Neighbors (KNN)
 # ============================================================
+# KNN is a classification algorithm that classifies a data point
+# based on how its neighbors (closest data points) are classified.
+# n_neighbors=5 means it looks at 5 nearest data points to decide.
 knn = KNeighborsClassifier(n_neighbors=5)
-knn.fit(X_train_scaled, y_train)
-y_pred_knn = knn.predict(X_test_scaled)
+knn.fit(X_train_scaled, y_train)                # Train the KNN model
+y_pred_knn = knn.predict(X_test_scaled)         # Predict labels for test data
 
+# Evaluate KNN model performance using different metrics
 print("\n=== K-Nearest Neighbors (KNN) Results ===")
-print("Accuracy:", accuracy_score(y_test, y_pred_knn))
-print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_knn))
-print("Classification Report:\n", classification_report(y_test, y_pred_knn))
+print("Accuracy:", accuracy_score(y_test, y_pred_knn))              # % of correct predictions
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_knn))  # Matrix showing TP, FP, TN, FN
+print("Classification Report:\n", classification_report(y_test, y_pred_knn))  # Precision, Recall, F1-Score
 
 
 
 # ============================================================
 # STEP 8: Apply Support Vector Machine (SVM)
 # ============================================================
-svm = SVC(kernel='linear')  # Linear kernel for binary classification
-svm.fit(X_train_scaled, y_train)
-y_pred_svm = svm.predict(X_test_scaled)
+# SVM is another supervised learning algorithm for classification.
+# It finds the best hyperplane (decision boundary) that separates classes.
+# kernel='linear' → linear boundary (good for linearly separable data)
+svm = SVC(kernel='linear')
+svm.fit(X_train_scaled, y_train)                # Train the SVM model
+y_pred_svm = svm.predict(X_test_scaled)         # Predict test labels
 
+# Evaluate SVM model performance
 print("\n=== Support Vector Machine (SVM) Results ===")
 print("Accuracy:", accuracy_score(y_test, y_pred_svm))
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_svm))
@@ -89,10 +122,12 @@ print("Classification Report:\n", classification_report(y_test, y_pred_svm))
 # ============================================================
 # STEP 9: Compare Model Performances
 # ============================================================
+# Create a summary DataFrame to compare accuracy of both models (KNN vs SVM)
 results = pd.DataFrame({
     'Model': ['KNN', 'SVM'],
     'Accuracy': [accuracy_score(y_test, y_pred_knn), accuracy_score(y_test, y_pred_svm)]
 })
+
 print("\n=== Model Performance Comparison ===")
 print(results)
 
@@ -101,6 +136,8 @@ print(results)
 # ============================================================
 # STEP 10: Visualization of Accuracy Comparison
 # ============================================================
+# Visual representation of model accuracy using a bar chart
+# seaborn barplot helps in comparing both models visually
 sns.barplot(x='Model', y='Accuracy', data=results)
-plt.title("Model Accuracy Comparison (KNN vs SVM)")
-plt.show()
+plt.title("Model Accuracy Comparison (KNN vs SVM)")  # Title for plot
+plt.show()  # Display the bar chart
